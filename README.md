@@ -17,11 +17,13 @@ This is a AI assitant project implemented by python using LLM and relative techn
 - First, we need to install necessary packages
 - Then, prepare the data we need
 - Setup environment variables via the .env file
-- Now, we go to the working directory the server
+- we use a local chromedriver to do web search, you should download it first
+
+ chromedriver_path="/Users/fengshiyi/Downloads/chromedriver-mac-x64/chromedriver"
+
+- Now, we can use args to specify the working directory and run the server:
+
 ```bash
-uv run job-hunting-assistant
+uv --directory /Users/fengshiyi/Downloads/shayne/learning/LLM/py-projects/job-hunting-assistant/src/job_hunting_server run job-hunting-assistant
 ```
-or we can use args to specify the working directory
-```bash
-uv ---directory /Users/fengshiyi/Downloads/shayne/learning/LLM/py-projects/job-hunting-assistant/src/job_hunting_server run job-hunting-assistant
-```
+
