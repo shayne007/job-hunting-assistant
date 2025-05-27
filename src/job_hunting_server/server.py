@@ -4,7 +4,7 @@ from .tools.job import JobTools
 
 class JobSearchMCPServer:
     def __init__(self):
-        self.name = "jobsearch_mcp_server"
+        self.name = "job_hunting_server"
         self.mcp = FastMCP(self.name)
 
         # Configure logging
