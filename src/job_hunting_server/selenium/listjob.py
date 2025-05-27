@@ -153,5 +153,5 @@ def listjob_by_keyword(keyword:str,page:int=1,size:int=30)->str:
 
 if __name__ == "__main__":
     print("listjob")
-    ret = listjob_by_keyword("AI应用开发")
+    ret = listjob_by_keyword("LLM应用开发")
     print(ret)

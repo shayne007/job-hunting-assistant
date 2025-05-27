@@ -10,11 +10,11 @@ class JobTools(LLMClient):
         def get_joblist_by_expect_job(job: str) -> str:
             """根据求职者的期望岗位获取岗位列表数据"""
             # 为了测试方便，可以改成从本地文件获取岗位列表
-            # with open('job.txt', 'r', encoding='utf-8') as f:
-                # jobs = f.read()
+            with open('job.txt', 'r', encoding='utf-8') as f:
+                jobs = f.read()
             
             #使用无头浏览器获取岗位
-            jobs = listjob_by_keyword(job)
+            # jobs = listjob_by_keyword(job)
 
             return jobs
 
