@@ -79,79 +79,100 @@ def listjob_by_keyword(keyword:str,page:int=1,size:int=30)->str:
     if driver is None:
         raise Exception("创建无头浏览器失败")
     print("创建无头浏览器成功")
-    #driver.maximize_window()
 
-    driver.get(url)
-    print("title: ",driver.title)
-    #print(driver.get_cookies())
-    #driver = set_cookies(driver)
-    #all_cookies = driver.get_cookies()    
-    #for cookie in all_cookies:      
-    #    print(cookie)
-    driver.save_screenshot("page_screenshot.png")
-    print("title: ",driver.title)
-    WebDriverWait(driver, 1000, 0.8).\
-        until(EC.presence_of_element_located((By.CSS_SELECTOR,
-          '.job-list-box'))) #等待页面加载到出现job-list-box 为止
+    try:
+        driver.get(url)
+        print("title: ",driver.title)
+        driver.save_screenshot("page_screenshot.png")
+        print("title: ",driver.title)
+        
+        # Wait for either job list or no results message
+        try:
+            WebDriverWait(driver, 20, 0.5).until(
+                lambda d: len(d.find_elements(By.CSS_SELECTOR, '.job-list-box')) > 0 or 
+                         len(d.find_elements(By.CSS_SELECTOR, '.no-data')) > 0
+            )
+        except Exception as e:
+            print(f"Timeout waiting for page elements: {str(e)}")
+            driver.save_screenshot("timeout_error.png")
+            raise Exception("页面加载超时，请检查网络连接或网站是否可访问")
 
-    li_list=driver.find_elements(By.CSS_SELECTOR,
-                              ".job-list-box li.job-card-wrapper")
-    jobs=[]
-    for li in li_list:
-        job_name_list=li.find_elements(By.CSS_SELECTOR,".job-name")
-        if len(job_name_list)==0:
-            continue
-        job={}
-        job["job_name"]=job_name_list[0].text
-        job_salary_list=li.find_elements(By.CSS_SELECTOR,".job-info .salary")
-        if job_salary_list and len(job_salary_list)>0:
-            job["job_salary"]=job_salary_list[0].text
-        else:
-            job["job_salary"]="暂无"
-        job_tags_list=li.find_elements(By.CSS_SELECTOR,".job-info .tag-list li")
-        if job_tags_list and len(job_tags_list)>0:
-            job["job_tags"]=[tag.text for tag in job_tags_list]
-        else:
-            job["job_tags"]=[]
-        com_name=li.find_element(By.CSS_SELECTOR,".company-name")
-        if com_name:
-            job["com_name"]=com_name.text
-        else:
-            continue # 
-        com_tags_list=li.find_elements(By.CSS_SELECTOR,".company-tag-list li")
-        if com_tags_list and len(com_tags_list)>0:
-            job["com_tags"]=[tag.text for tag in com_tags_list]
-        else:
-            job["com_tags"]=[]
-        job_tags_list_footer=li.find_elements(By.CSS_SELECTOR,".job-card-footer  li")
-        if job_tags_list_footer and len(job_tags_list_footer)>0:
-            job["job_tags_footer"]=[tag.text for tag in job_tags_list_footer]
-        else:
-            job["job_tags_footer"]=[]
-        jobs.append(job)
-    driver.close()
-    job_tpl="""
+        # Check if no results found
+        if len(driver.find_elements(By.CSS_SELECTOR, '.no-data')) > 0:
+            driver.close()
+            return "未找到相关职位"
+
+        li_list=driver.find_elements(By.CSS_SELECTOR,
+                                  ".job-list-box li.job-card-wrapper")
+        jobs=[]
+        for li in li_list:
+            job_name_list=li.find_elements(By.CSS_SELECTOR,".job-name")
+            if len(job_name_list)==0:
+                continue
+            job={}
+            job["job_name"]=job_name_list[0].text
+            job_salary_list=li.find_elements(By.CSS_SELECTOR,".job-info .salary")
+            if job_salary_list and len(job_salary_list)>0:
+                job["job_salary"]=job_salary_list[0].text
+            else:
+                job["job_salary"]="暂无"
+            job_tags_list=li.find_elements(By.CSS_SELECTOR,".job-info .tag-list li")
+            if job_tags_list and len(job_tags_list)>0:
+                job["job_tags"]=[tag.text for tag in job_tags_list]
+            else:
+                job["job_tags"]=[]
+            com_name=li.find_element(By.CSS_SELECTOR,".company-name")
+            if com_name:
+                job["com_name"]=com_name.text
+            else:
+                continue
+            com_tags_list=li.find_elements(By.CSS_SELECTOR,".company-tag-list li")
+            if com_tags_list and len(com_tags_list)>0:
+                job["com_tags"]=[tag.text for tag in com_tags_list]
+            else:
+                job["com_tags"]=[]
+            job_tags_list_footer=li.find_elements(By.CSS_SELECTOR,".job-card-footer  li")
+            if job_tags_list_footer and len(job_tags_list_footer)>0:
+                job["job_tags_footer"]=[tag.text for tag in job_tags_list_footer]
+            else:
+                job["job_tags_footer"]=[]
+            jobs.append(job)
+        
+        driver.close()
+        job_tpl="""
 {}. 岗位名称: {}
 公司名称: {}
 岗位要求: {}
 技能要求: {}
 薪资待遇: {}
      """
-    ret=""
-    if len(jobs)>0:
-        for i, job in enumerate(jobs):
-            job_desc = job_tpl.format(str(i + 1), job["job_name"],
-                                    job["com_name"],
-                                    ",".join(job["job_tags"]),
-                                    ",".join(job["job_tags_footer"]),
-                                    job["job_salary"])
-            ret += job_desc + "\n"
-        print("完成直聘网分析")
-        return ret
-    else:
-        raise Exception("没有找到任何岗位列表")
+        ret=""
+        if len(jobs)>0:
+            for i, job in enumerate(jobs):
+                job_desc = job_tpl.format(str(i + 1), job["job_name"],
+                                        job["com_name"],
+                                        ",".join(job["job_tags"]),
+                                        ",".join(job["job_tags_footer"]),
+                                        job["job_salary"])
+                ret += job_desc + "\n"
+            print("完成直聘网分析")
+            return ret
+        else:
+            return "未找到任何岗位列表"
+            
+    except Exception as e:
+        print(f"Error during job search: {str(e)}")
+        if driver:
+            driver.save_screenshot("error_screenshot.png")
+            driver.close()
+        raise Exception(f"搜索过程中发生错误: {str(e)}")
 
 if __name__ == "__main__":
     print("listjob")
     ret = listjob_by_keyword("LLM应用开发")
     print(ret)
+    
+    # Save results to file
+    with open("job_search_result.txt", "w", encoding="utf-8") as f:
+        f.write(ret)
+    print("Results have been saved to job_search_result.txt")

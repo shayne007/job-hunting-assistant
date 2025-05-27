@@ -1,6 +1,7 @@
 import logging
 from mcp.server.fastmcp import FastMCP
 from .tools.job import JobTools
+from .tools.resume import ResumeTools
 
 class JobSearchMCPServer:
     def __init__(self):
@@ -23,6 +24,10 @@ class JobSearchMCPServer:
         job_tools = JobTools(self.logger)
 
         job_tools.register_tools(self.mcp)
+
+        resume_tools = ResumeTools()
+
+        resume_tools.register_tools(self.mcp)
 
     def run(self):
         """Run the MCP server."""
