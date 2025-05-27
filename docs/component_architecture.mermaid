@@ -1,0 +1,64 @@
+graph LR
+    subgraph "Presentation Layer"
+        A[MCP Protocol Interface]
+    end
+    
+    subgraph "Application Layer"
+        B[JobSearchMCPServer]
+        C[FastMCP Framework]
+        B --> C
+    end
+    
+    subgraph "Business Logic Layer"
+        D[JobTools]
+        E[Tool Registration]
+        F[Job Matching Logic]
+        D --> E
+        D --> F
+    end
+    
+    subgraph "Service Layer"
+        G[LLMClient Service]
+        H[Web Scraping Service]
+        I[Prompt Management]
+    end
+    
+    subgraph "Infrastructure Layer"
+        J[Selenium WebDriver]
+        K[OpenAI Client]
+        L[File System]
+        M[Environment Configuration]
+    end
+    
+    subgraph "External Services"
+        N[DeepSeek API]
+        O[BOSS直聘 Website]
+        P[Local Storage]
+    end
+    
+    A --> B
+    B --> D
+    D --> G
+    D --> H
+    D --> I
+    G --> K
+    H --> J
+    K --> N
+    J --> O
+    D --> L
+    L --> P
+    G --> M
+    
+    classDef presentation fill:#e3f2fd
+    classDef application fill:#f1f8e9
+    classDef business fill:#fff8e1
+    classDef service fill:#fce4ec
+    classDef infrastructure fill:#f3e5f5
+    classDef external fill:#efebe9
+    
+    class A presentation
+    class B,C application
+    class D,E,F business
+    class G,H,I service
+    class J,K,L,M infrastructure
+    class N,O,P external

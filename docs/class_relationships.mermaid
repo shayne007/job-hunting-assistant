@@ -1,0 +1,67 @@
+classDiagram
+    class JobSearchMCPServer {
+        +name: string
+        +mcp: FastMCP
+        +logger: Logger
+        +__init__()
+        +_register_tools()
+        +run()
+    }
+    
+    class JobTools {
+        +logger: Logger
+        +client: OpenAI
+        +register_tools(mcp)
+        +get_joblist_by_expect_job(job) string
+        +get_job_by_resume(jobs, resume) string
+    }
+    
+    class LLMClient {
+        +logger: Logger
+        +client: OpenAI
+        +__init__(logger)
+        +_get_client() OpenAI
+        +send_messages(messages) Response
+    }
+    
+    class WebScraper {
+        <<module>>
+        +init_driver() WebDriver
+        +set_cookies(browser) WebDriver
+        +listjob_by_keyword(keyword, page, size) string
+        +get_UA() string
+    }
+    
+    class PromptManager {
+        <<module>>
+        +Job_Search_Prompt: string
+    }
+    
+    class FastMCP {
+        <<external>>
+        +tool()
+        +run()
+    }
+    
+    class OpenAI {
+        <<external>>
+        +chat.completions.create()
+    }
+    
+    class WebDriver {
+        <<external>>
+        +get()
+        +find_elements()
+        +close()
+    }
+    
+    JobSearchMCPServer --> FastMCP : uses
+    JobSearchMCPServer --> JobTools : creates
+    JobTools --|> LLMClient : inherits
+    JobTools --> WebScraper : uses
+    JobTools --> PromptManager : uses
+    LLMClient --> OpenAI : uses
+    WebScraper --> WebDriver : uses
+    
+    note for JobTools "Inherits from LLMClient\nto access AI capabilities"
+    note for WebScraper "Currently commented out\nin favor of local file"

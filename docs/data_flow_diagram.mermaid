@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant Client
+    participant MCPServer as MCP Server
+    participant JobTools
+    participant LLMClient
+    participant Selenium
+    participant DeepSeek as DeepSeek API
+    participant BossZhipin as BOSS直聘
+
+    Note over Client,BossZhipin: Job Search Flow
+
+    Client->>MCPServer: Request job recommendations
+    MCPServer->>JobTools: get_joblist_by_expect_job(job)
+    
+    alt Using Web Scraping (Commented Out)
+        JobTools->>Selenium: listjob_by_keyword(job)
+        Selenium->>BossZhipin: Scrape job listings
+        BossZhipin-->>Selenium: HTML content
+        Selenium-->>JobTools: Parsed job data
+    else Using Local File (Current Implementation)
+        JobTools->>JobTools: Read job.txt file
+    end
+    
+    JobTools-->>MCPServer: Job listings data
+    MCPServer->>JobTools: get_job_by_resume(jobs, resume)
+    
+    JobTools->>JobTools: Format prompt with resume & jobs
+    JobTools->>LLMClient: send_messages(prompt)
+    LLMClient->>DeepSeek: API request with prompt
+    DeepSeek-->>LLMClient: AI recommendations
+    LLMClient-->>JobTools: Processed response
+    JobTools-->>MCPServer: Job recommendations & advice
+    MCPServer-->>Client: Final recommendations
