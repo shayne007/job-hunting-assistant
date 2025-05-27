@@ -81,4 +81,21 @@ graph TB
 ```bash
 uv --directory /Users/fengshiyi/Downloads/shayne/learning/LLM/py-projects/job-hunting-assistant/src/job_hunting_server run job-hunting-assistant
 ```
+- Claude Desktop or Cline
+```json
+{
+    "mcpServers": {
+        "job_hunting_server": {
+            "command": "uv",
+            "args": [
+              "--directory",
+              "/Users/fengshiyi/Downloads/shayne/learning/LLM/py-projects/job-hunting-assistant/src/job_hunting_server",
+              "run",
+              "job-hunting-assistant"
+            ]
+          }
+    }
+  }
+
+```
 
