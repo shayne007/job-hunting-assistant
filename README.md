@@ -8,6 +8,7 @@ This is a AI assitant project implemented by python using LLM and relative techn
 ## Key Tech Highlight
 - LLM's superpower to optimizing text structure
 - RAG statege to supply rich context for LLM
+- RAG summary content to limit tokens sent to LLM
 - MCP Server to provide the tools LLM need when to take actions
 
 ## System Architecture

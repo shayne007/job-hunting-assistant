@@ -10,3 +10,6 @@ wheels/
 .venv
 .env
 .DS_Store
+page_screenshot.png
+error_screenshot.png
+timeout_error.png

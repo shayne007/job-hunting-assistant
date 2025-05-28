@@ -41,7 +41,6 @@ def set_cookies(browser):    # 在已登录后的网站页面中获取Cookie信�
 
 def init_driver()->webdriver.Chrome:
     chromedriver_path="/Users/fengshiyi/Downloads/chromedriver-mac-x64/chromedriver"
-    # '--verbose',  log_output=sys.stdout,
     service = Service(executable_path=chromedriver_path,
                       service_args=['--headless=new','--no-sandbox',
                                     '--disable-dev-shm-usage',
@@ -51,28 +50,37 @@ def init_driver()->webdriver.Chrome:
                                    ])
 
     options = Options()
-    options.add_argument('--disable-gpu') # 禁用GPU渲染          
-    options.add_argument('--incognito')    # 无痕模式  
-    options.add_argument('--ignore-certificate-errors-spki-list')  # 忽略与证书相关的错误  
-    options.add_argument('--disable-notifications')  # 禁用浏览器通知和推送API  
-    options.add_argument(f'user-agent={get_UA()}')   # 修改用户代理信息  
-    # options.add_argument('--window-name=huya_test')  # 设置初始窗口用户标题  
-    # options.add_argument('--window-workspace=1')  # 指定初始窗口工作区  # 
-    options.add_argument('--disable-extensions')  # 禁用浏览器扩展  
-    options.add_argument('--force-dark-mode')  # 使用暗模式  
-    options.add_argument('--start-fullscreen')  # 指定浏览器是否以全屏模式启，与进入浏览器后按F11效果相同  
+    options.add_argument('--disable-gpu')
+    options.add_argument('--incognito')
+    options.add_argument('--ignore-certificate-errors-spki-list')
+    options.add_argument('--disable-notifications')
+    options.add_argument(f'user-agent={get_UA()}')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--force-dark-mode')
+    options.add_argument('--start-fullscreen')
     options.add_argument('--start-maximized')
-    # options.add_argument('--proxy-server=http://z976.kdltps.com:15818')
-    #path = "D:\\Program Files\\chrome-win64\\chrome.exe"
-    #options.binary_location = path
+    # Add additional options to make browser more stealthy
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    options.add_experimental_option('useAutomationExtension', False)
+    
     driver = webdriver.Chrome(options=options,service=service)
+    # Execute CDP commands to prevent detection
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': '''
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            })
+        '''
+    })
     
     return driver
+
 def listjob_by_keyword(keyword:str,page:int=1,size:int=30)->str:
     print("listjob")
     url=listurl.format(urlencode({
         "query":keyword,
-         "city":"101020100"
+         "city":"101280600"
         }))
     print("url: ",url)
     driver=init_driver()
@@ -86,16 +94,31 @@ def listjob_by_keyword(keyword:str,page:int=1,size:int=30)->str:
         driver.save_screenshot("page_screenshot.png")
         print("title: ",driver.title)
         
-        # Wait for either job list or no results message
-        try:
-            WebDriverWait(driver, 20, 0.5).until(
-                lambda d: len(d.find_elements(By.CSS_SELECTOR, '.job-list-box')) > 0 or 
-                         len(d.find_elements(By.CSS_SELECTOR, '.no-data')) > 0
-            )
-        except Exception as e:
-            print(f"Timeout waiting for page elements: {str(e)}")
-            driver.save_screenshot("timeout_error.png")
-            raise Exception("页面加载超时，请检查网络连接或网站是否可访问")
+        # Increase timeout and add more robust waiting
+        max_retries = 3
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                # Wait for either job list or no results message
+                WebDriverWait(driver, 30, 1).until(
+                    lambda d: len(d.find_elements(By.CSS_SELECTOR, '.job-list-box')) > 0 or 
+                             len(d.find_elements(By.CSS_SELECTOR, '.no-data')) > 0 or
+                             len(d.find_elements(By.CSS_SELECTOR, '.login-box')) > 0
+                )
+                break
+            except Exception as e:
+                retry_count += 1
+                print(f"Attempt {retry_count} failed: {str(e)}")
+                if retry_count == max_retries:
+                    driver.save_screenshot("timeout_error.png")
+                    raise Exception("页面加载超时，请检查网络连接或网站是否可访问")
+                time.sleep(5)  # Wait before retrying
+                driver.refresh()
+
+        # Check if we need to login
+        if len(driver.find_elements(By.CSS_SELECTOR, '.login-box')) > 0:
+            driver.close()
+            return "需要登录才能访问，请先登录BOSS直聘"
 
         # Check if no results found
         if len(driver.find_elements(By.CSS_SELECTOR, '.no-data')) > 0:

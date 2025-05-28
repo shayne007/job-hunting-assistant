@@ -1,3 +1,7 @@
 selenium
 openai
+langchain
+langchain-community
+langchain-openai
+nltk
 python-docx
